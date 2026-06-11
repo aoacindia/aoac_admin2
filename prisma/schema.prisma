@@ -1,0 +1,23 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model CredentialLog {
+  id        Int      @id @default(autoincrement())
+  email     String
+  password  String
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+model LoginState {
+  email        String   @id
+  attemptCount Int      @default(0)
+  updatedAt    DateTime @updatedAt
+}

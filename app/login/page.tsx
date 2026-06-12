@@ -1,11 +1,9 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -25,13 +23,7 @@ export default function LoginPage() {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        setError(data.error ?? "Invalid password try again");
-        return;
-      }
-
-      router.push("/dashboard");
-      router.refresh();
+      setError(data.error ?? "Invalid password try again");
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {

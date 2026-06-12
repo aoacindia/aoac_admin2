@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { setSession } from "@/lib/session";
 
 export async function POST(request: Request) {
   try {
@@ -19,32 +18,10 @@ export async function POST(request: Request) {
       data: { email, password },
     });
 
-    const loginState = await prisma.loginState.upsert({
-      where: { email },
-      create: { email, attemptCount: 0 },
-      update: {},
-    });
-
-    if (loginState.attemptCount === 0) {
-      await prisma.loginState.update({
-        where: { email },
-        data: { attemptCount: 1 },
-      });
-
-      return NextResponse.json(
-        { error: "Invalid password try again" },
-        { status: 401 },
-      );
-    }
-
-    await prisma.loginState.update({
-      where: { email },
-      data: { attemptCount: loginState.attemptCount + 1 },
-    });
-
-    await setSession(email);
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json(
+      { error: "Invalid password try again" },
+      { status: 401 },
+    );
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json(

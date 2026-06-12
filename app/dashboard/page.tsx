@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import Header from "@/components/Header";
+import SessionExpiryGuard from "@/components/SessionExpiryGuard";
 import { getSession } from "@/lib/session";
 
 export default async function DashboardPage() {
@@ -11,6 +12,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex min-h-full flex-col bg-zinc-50">
+      <SessionExpiryGuard expiresAt={session.expiresAt} />
       <Header />
       <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
         <div className="rounded-xl border border-zinc-200 bg-white p-8 shadow-sm">

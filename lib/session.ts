@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 
 export const SESSION_COOKIE = "aoac_session";
-export const SESSION_MAX_AGE_SECONDS = 15 * 60;
+export const SESSION_MAX_AGE_SECONDS = 2 * 60;
 
 export type SessionPayload = {
   email: string;

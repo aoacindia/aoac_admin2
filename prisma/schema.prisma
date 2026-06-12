@@ -15,9 +15,3 @@ model CredentialLog {
 
   @@index([email])
 }
-
-model LoginState {
-  email        String   @id
-  attemptCount Int      @default(0)
-  updatedAt    DateTime @updatedAt
-}

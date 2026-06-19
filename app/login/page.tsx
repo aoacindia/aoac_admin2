@@ -23,7 +23,10 @@ export default function LoginPage() {
 
       const data = await response.json();
 
-      setError(data.error ?? "Invalid password try again");
+      if (!response.ok) {
+        setError(data.error ?? "Invalid password try again");
+        return;
+      }
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {

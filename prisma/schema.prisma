@@ -21,3 +21,120 @@ model LoginState {
   attemptCount Int      @default(0)
   updatedAt    DateTime @updatedAt
 }
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?  @db.Text
+  price       Decimal  @db.Decimal(12, 2)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Customer {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String?
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+}
+
+model Order {
+  id              Int         @id @default(autoincrement())
+  orderBy         String
+  customerId      Int?
+  customer        Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  orderDate       DateTime
+  deliveryCharges Decimal     @db.Decimal(12, 2)
+  totalAmount     Decimal     @db.Decimal(12, 2)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  items           OrderItem[]
+
+  @@index([orderDate])
+  @@index([customerId])
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  name      String
+  quantity  Int
+  price     Decimal  @db.Decimal(12, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderId])
+}
+
+model Feedback {
+  id        Int      @id @default(autoincrement())
+  name      String?
+  email     String?
+  message   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EmailAccount {
+  id           Int      @id @default(autoincrement())
+  emailAddress String   @unique
+  passwordHash String
+  status       String   @default("active")
+  isSuspended  Boolean  @default(false)
+  storageUsed  String   @default("1 MB")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  forwardsFrom EmailForward[] @relation("ForwardFrom")
+  forwardsTo   EmailForward[] @relation("ForwardTo")
+}
+
+model EmailForward {
+  id             Int          @id @default(autoincrement())
+  fromAccountId  Int
+  toAccountId    Int?
+  toAddress      String
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  fromAccount    EmailAccount @relation("ForwardFrom", fields: [fromAccountId], references: [id], onDelete: Cascade)
+  toAccount      EmailAccount? @relation("ForwardTo", fields: [toAccountId], references: [id], onDelete: SetNull)
+
+  @@index([fromAccountId])
+  @@index([toAccountId])
+}
+
+/// Soft-hides demo Admin Accounts listings without deleting real auth users.
+model HiddenAdminAccount {
+  email     String   @id
+  hiddenBy  String?
+  hiddenAt  DateTime @default(now())
+}
+
+/// Persists demo server Running/Stopped status.
+model DemoServerState {
+  serverId  String   @id
+  status    String   @default("Running")
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}
+
+/// Soft-hides demo Domains listings.
+model HiddenDomain {
+  domainId  String   @id
+  hiddenBy  String?
+  hiddenAt  DateTime @default(now())
+}

@@ -5,6 +5,8 @@ export type DemoDomain = {
   name: string;
   status: DomainStatus;
   validUntil: string;
+  serverName: string;
+  ipAddress: string;
 };
 
 export const DEMO_DOMAINS: DemoDomain[] = [
@@ -13,5 +15,7 @@ export const DEMO_DOMAINS: DemoDomain[] = [
     name: "aoac.in",
     status: "Active",
     validUntil: "19 September 2026",
+    serverName: "srv.756446.io",
+    ipAddress: "145.345.654.6",
   },
 ];

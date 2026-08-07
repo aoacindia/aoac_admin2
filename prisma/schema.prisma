@@ -46,15 +46,13 @@ model Customer {
   phone     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  orders Order[]
 }
 
+/// Legacy tables retained in DB but unused by the Orders module.
 model Order {
   id              Int         @id @default(autoincrement())
   orderBy         String
   customerId      Int?
-  customer        Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
   orderDate       DateTime
   deliveryCharges Decimal     @db.Decimal(12, 2)
   totalAmount     Decimal     @db.Decimal(12, 2)
@@ -77,6 +75,35 @@ model OrderItem {
   updatedAt DateTime @updatedAt
 
   @@index([orderId])
+}
+
+/// Import-friendly orders table matching ImportedOrder.csv columns exactly.
+model ImportedOrder {
+  id              String              @id
+  orderDate       DateTime            @map("order_date")
+  orderName       String              @map("order_name")
+  deliveryCharges Decimal             @map("delivery_charges") @db.Decimal(12, 2)
+  orderTotal      Decimal             @map("order_total") @db.Decimal(12, 2)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  items           ImportedOrderItem[]
+
+  @@index([orderDate])
+  @@index([orderName])
+  @@map("imported_orders")
+}
+
+/// Import-friendly order items matching ImportedOrderItem.csv columns exactly.
+model ImportedOrderItem {
+  id        String        @id
+  orderId   String        @map("order_id")
+  lineIndex Int           @map("line_index")
+  itemName  String        @map("item_name")
+  amount    Decimal       @db.Decimal(12, 2)
+  order     ImportedOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("imported_order_items")
 }
 
 model Feedback {

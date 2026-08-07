@@ -1,23 +1,25 @@
 import { redirect } from "next/navigation";
 import Header from "@/components/Header";
-import OrdersClient from "@/components/OrdersClient";
+import OrderDetailClient from "@/components/OrderDetailClient";
 import PageShell from "@/components/PageShell";
 import SessionExpiryGuard from "@/components/SessionExpiryGuard";
 import { getSession } from "@/lib/session";
 
-export default async function OrdersPage() {
+type PageProps = {
+  params: Promise<{ id: string }>;
+};
+
+export default async function OrderDetailPage({ params }: PageProps) {
   const session = await getSession();
   if (!session) redirect("/login");
+  await params;
 
   return (
     <div className="flex min-h-full flex-col bg-[#F8F9FA]">
       <SessionExpiryGuard expiresAt={session.expiresAt} />
       <Header email={session.email} showLogout />
-      <PageShell
-        title="Orders"
-        description="Imported orders from imported_orders / imported_order_items"
-      >
-        <OrdersClient />
+      <PageShell title="Order Details" backHref="/orders">
+        <OrderDetailClient />
       </PageShell>
     </div>
   );

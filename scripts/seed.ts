@@ -37,10 +37,174 @@ const USERS = [
 ] as const;
 
 const DEMO_EMAILS = [
-  { emailAddress: "mchandra@aoac.in", password: "demo-pass", storageUsed: "234 MB" },
-  { emailAddress: "teruomiura@aoac.in", password: "demo-pass", storageUsed: "198 MB" },
-  { emailAddress: "aoac@aoac.in", password: "demo-pass", storageUsed: "128 MB" },
+  {
+    emailAddress: "mchandra@aoac.in",
+    password: "demo-pass",
+    storageUsed: "234 MB",
+  },
+  {
+    emailAddress: "teruomiura@aoac.in",
+    password: "demo-pass",
+    storageUsed: "198 MB",
+  },
+  {
+    emailAddress: "aoac@aoac.in",
+    password: "demo-pass",
+    storageUsed: "128 MB",
+  },
 ] as const;
+
+type SeedOrderItem = {
+  id: string;
+  itemName: string;
+  amount: string;
+};
+
+type SeedOrder = {
+  id: string;
+  orderName: string;
+  date: string;
+  deliveryCharges: string;
+  items: SeedOrderItem[];
+};
+
+const HISTORICAL_ORDERS: SeedOrder[] = [
+  {
+    id: "cmnseedord20260501aoac01",
+    orderName: "ORD-0501",
+    date: "2026-05-01",
+    deliveryCharges: "80.00",
+    items: [
+      {
+        id: "cmnseeditm20260501aoac01",
+        itemName: "Brown Rice 2kg",
+        amount: "450.00",
+      },
+      {
+        id: "cmnseeditm20260501aoac02",
+        itemName: "Brown Rice 1kg",
+        amount: "240.00",
+      },
+      {
+        id: "cmnseeditm20260501aoac03",
+        itemName: "Soy Sauce",
+        amount: "180.00",
+      },
+    ],
+  },
+  {
+    id: "cmnseedord20260508aoac02",
+    orderName: "ORD-0508",
+    date: "2026-05-08",
+    deliveryCharges: "120.00",
+    items: [
+      {
+        id: "cmnseeditm20260508aoac01",
+        itemName: "Japanese Sushi Rice",
+        amount: "520.00",
+      },
+      {
+        id: "cmnseeditm20260508aoac02",
+        itemName: "Miso Paste",
+        amount: "350.00",
+      },
+      {
+        id: "cmnseeditm20260508aoac03",
+        itemName: "Soy Sauce",
+        amount: "180.00",
+      },
+      {
+        id: "cmnseeditm20260508aoac04",
+        itemName: "Lemon Squash",
+        amount: "220.00",
+      },
+    ],
+  },
+  {
+    id: "cmnseedord20260513aoac03",
+    orderName: "ORD-0513",
+    date: "2026-05-13",
+    deliveryCharges: "100.00",
+    items: [
+      {
+        id: "cmnseeditm20260513aoac01",
+        itemName: "Brown Rice 2kg",
+        amount: "450.00",
+      },
+      {
+        id: "cmnseeditm20260513aoac02",
+        itemName: "Japanese Sushi Rice",
+        amount: "520.00",
+      },
+      {
+        id: "cmnseeditm20260513aoac03",
+        itemName: "Moringa Powder",
+        amount: "680.00",
+      },
+      {
+        id: "cmnseeditm20260513aoac04",
+        itemName: "Lemon Squash",
+        amount: "220.00",
+      },
+    ],
+  },
+];
+
+function sumAmounts(items: SeedOrderItem[], deliveryCharges: string): string {
+  const total =
+    items.reduce((sum, item) => sum + Number(item.amount), 0) +
+    Number(deliveryCharges);
+  return total.toFixed(2);
+}
+
+async function seedHistoricalImportedOrders(prisma: PrismaClient) {
+  for (const order of HISTORICAL_ORDERS) {
+    const timestamp = new Date(`${order.date}T18:30:00.000Z`);
+    const orderTotal = sumAmounts(order.items, order.deliveryCharges);
+
+    await prisma.importedOrder.upsert({
+      where: { id: order.id },
+      create: {
+        id: order.id,
+        orderName: order.orderName,
+        orderDate: timestamp,
+        deliveryCharges: order.deliveryCharges,
+        orderTotal,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        items: {
+          create: order.items.map((item, index) => ({
+            id: item.id,
+            lineIndex: index,
+            itemName: item.itemName,
+            amount: item.amount,
+          })),
+        },
+      },
+      update: {
+        orderName: order.orderName,
+        orderDate: timestamp,
+        deliveryCharges: order.deliveryCharges,
+        orderTotal,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+        items: {
+          deleteMany: {},
+          create: order.items.map((item, index) => ({
+            id: item.id,
+            lineIndex: index,
+            itemName: item.itemName,
+            amount: item.amount,
+          })),
+        },
+      },
+    });
+
+    console.log(
+      `Upserted historical order ${order.orderName} (${order.date}) total=${orderTotal}`,
+    );
+  }
+}
 
 async function main() {
   const prisma = createClient();
@@ -73,24 +237,7 @@ async function main() {
     console.log(`Upserted email ${account.emailAddress}`);
   }
 
-  const orderCount = await prisma.order.count();
-  if (orderCount === 0) {
-    await prisma.order.create({
-      data: {
-        orderBy: "AOAC Demo Customer",
-        orderDate: new Date("2026-07-01T10:00:00.000Z"),
-        deliveryCharges: "50.00",
-        totalAmount: "350.00",
-        items: {
-          create: [
-            { name: "AOAC Training Kit", quantity: 1, price: "200.00" },
-            { name: "Lab Manual", quantity: 2, price: "50.00" },
-          ],
-        },
-      },
-    });
-    console.log("Created sample order");
-  }
+  await seedHistoricalImportedOrders(prisma);
 
   await prisma.$disconnect();
 }

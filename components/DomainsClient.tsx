@@ -135,6 +135,22 @@ export default function DomainsClient() {
                         {domain.validUntil}
                       </p>
                     </div>
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">
+                        Connected to Server Name
+                      </p>
+                      <p className="mt-1 text-sm text-zinc-800">
+                        {domain.serverName}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-zinc-400">
+                        IP Address
+                      </p>
+                      <p className="mt-1 text-sm text-zinc-800">
+                        {domain.ipAddress}
+                      </p>
+                    </div>
                   </div>
                 </div>
 

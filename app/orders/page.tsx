@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import OrdersClient from "@/components/OrdersClient";
 import PageShell from "@/components/PageShell";
 import SessionExpiryGuard from "@/components/SessionExpiryGuard";
+import { canDownloadOrdersPdf } from "@/lib/permissions";
 import { getSession } from "@/lib/session";
 
 export default async function OrdersPage() {
@@ -13,11 +14,8 @@ export default async function OrdersPage() {
     <div className="flex min-h-full flex-col bg-[#F8F9FA]">
       <SessionExpiryGuard expiresAt={session.expiresAt} />
       <Header email={session.email} showLogout />
-      <PageShell
-        title="Orders"
-        description="Imported orders from imported_orders / imported_order_items"
-      >
-        <OrdersClient />
+      <PageShell title="Orders" description="View and manage orders">
+        <OrdersClient canDownloadPdf={canDownloadOrdersPdf(session.email)} />
       </PageShell>
     </div>
   );

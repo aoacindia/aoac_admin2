@@ -43,7 +43,13 @@ function toDateInputValue(iso: string) {
   return date.toISOString().slice(0, 10);
 }
 
-export default function OrdersClient() {
+type OrdersClientProps = {
+  canDownloadPdf?: boolean;
+};
+
+export default function OrdersClient({
+  canDownloadPdf = false,
+}: OrdersClientProps) {
   const [orders, setOrders] = useState<ImportedOrder[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -62,6 +68,7 @@ export default function OrdersClient() {
   const [page, setPage] = useState(1);
   const [deleteTarget, setDeleteTarget] = useState<ImportedOrder | null>(null);
   const [busy, setBusy] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const loadOrders = useCallback(async () => {
     setLoading(true);
@@ -137,6 +144,43 @@ export default function OrdersClient() {
       setError(err instanceof Error ? err.message : "Delete failed.");
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function handleDownloadPdf() {
+    if (!canDownloadPdf || orders.length === 0) return;
+    setDownloading(true);
+    setError("");
+    try {
+      const response = await fetch("/api/orders/export-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderIds: orders.map((order) => order.id),
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to download PDF.");
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `orders-${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      setMessage(
+        `Downloaded PDF for ${orders.length} order${orders.length === 1 ? "" : "s"} shown on this page.`,
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "PDF download failed.");
+    } finally {
+      setDownloading(false);
     }
   }
 
@@ -219,6 +263,16 @@ export default function OrdersClient() {
           >
             Clear
           </button>
+          {canDownloadPdf && (
+            <button
+              type="button"
+              disabled={downloading || loading || orders.length === 0}
+              onClick={handleDownloadPdf}
+              className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {downloading ? "Preparing PDF..." : "Download PDF"}
+            </button>
+          )}
         </div>
       </form>
 

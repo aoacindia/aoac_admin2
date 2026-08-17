@@ -49,6 +49,20 @@ export function isSpecialLoginEmail(email: string): boolean {
   return normalizeEmail(email) === SPECIAL_LOGIN_EMAIL;
 }
 
+/** Only this user may download Orders PDF of the currently shown list. */
+export const ORDERS_PDF_DOWNLOAD_USERS = [
+  "teruomiura@ashaasia.org",
+] as const;
+
+export function canDownloadOrdersPdf(
+  email: string | null | undefined,
+): boolean {
+  if (!email) return false;
+  return (ORDERS_PDF_DOWNLOAD_USERS as readonly string[]).includes(
+    normalizeEmail(email),
+  );
+}
+
 /** Deterministic storage label for demo display when creating accounts. */
 export function getDefaultStorageUsed(emailAddress: string): string {
   const email = normalizeEmail(emailAddress);
